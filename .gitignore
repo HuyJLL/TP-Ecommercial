@@ -1,0 +1,9 @@
+# Bỏ qua thư viện của Node.js
+node_modules/
+
+# Bỏ qua các file môi trường (chứa mật khẩu, API key)
+.env
+
+# Bỏ qua ảnh người dùng tải lên
+backend/uploads/
+frontend/dist/
