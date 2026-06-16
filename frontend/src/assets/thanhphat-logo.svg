@@ -1,0 +1,8 @@
+<svg width="260" height="90" viewBox="0 0 260 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="260" height="90" rx="14" fill="#0f305c" />
+  <path d="M34 62C74 9 142 -6 172 16C204 41 215 76 180 80C154 82 112 78 82 70C53 63 24 57 34 62Z" fill="#27a544" />
+  <path d="M53 34C53 23 63 15 74 15H110C121 15 131 24 131 35C131 46 121 56 110 56H74C63 56 53 46 53 34Z" fill="white" opacity="0.65" />
+  <text x="94" y="36" fill="#ffffff" font-family="Arial, sans-serif" font-size="12" font-weight="700">COMPUTER</text>
+  <text x="96" y="58" fill="#e01a26" font-family="Arial, sans-serif" font-size="34" font-weight="800">TPC</text>
+  <text x="94" y="78" fill="#ff5a47" font-family="Arial, sans-serif" font-size="15" font-weight="700">Technology</text>
+</svg>

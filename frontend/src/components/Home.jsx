@@ -8,24 +8,32 @@ const Home = () => {
     const user = userString ? JSON.parse(userString) : null;
 
     const [products, setProducts] = useState([]);
+    const [categoriesData, setCategoriesData] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
     const [sortOrder, setSortOrder] = useState('');
+    const [loading, setLoading] = useState(true);
     
     // State cho Pop-up thông báo
     const [modal, setModal] = useState({ isOpen: false, message: '' });
 
     // Lấy dữ liệu sản phẩm khi vừa vào trang
     useEffect(() => {
-        const fetchProducts = async () => {
+        const fetchData = async () => {
             try {
-                const response = await api.get('/products');
-                setProducts(response.data);
+                const [productsResponse, categoriesResponse] = await Promise.all([
+                    api.get('/products'),
+                    api.get('/categories')
+                ]);
+                setProducts(productsResponse.data || []);
+                setCategoriesData(categoriesResponse.data || []);
             } catch (error) {
-                console.error("Lỗi khi tải sản phẩm", error);
+                console.error('Lỗi khi tải dữ liệu', error);
+            } finally {
+                setLoading(false);
             }
         };
-        fetchProducts();
+        fetchData();
     }, []);
 
     // Hàm Xử lý thêm vào giỏ hàng
@@ -66,9 +74,10 @@ const Home = () => {
         }
     };
 
-    // Lấy danh sách các danh mục độc nhất từ sản phẩm hiện có
-    // Sửa lại: lấy p.category?.name vì category giờ là một Object
-    const categories = [...new Set(products.map(p => p.category?.name).filter(Boolean))];
+    // Lấy danh sách các danh mục từ backend nếu có, nếu không thì dùng dữ liệu sản phẩm
+    const categories = categoriesData.length > 0
+        ? categoriesData.map(category => category.name)
+        : [...new Set(products.map(p => p.category?.name).filter(Boolean))];
 
     // Xử lý Lọc & Sắp xếp sản phẩm
     let filteredProducts = products.filter(product => {
@@ -83,162 +92,224 @@ const Home = () => {
         filteredProducts.sort((a, b) => b.price - a.price); // Cao đến thấp
     }
 
+    const heroCategories = categoriesData.length > 0 ? categoriesData.slice(0, 4) : [
+        { name: 'Laptop' },
+        { name: 'Sản phẩm Apple' },
+        { name: 'Gaming Gear' },
+        { name: 'Phụ kiện máy tính' }
+    ];
+
+    const promoCategories = categoriesData.length > 0 ? categoriesData.map(category => category.name) : [
+        'Laptop',
+        'Sản phẩm Apple',
+        'Điện máy',
+        'Điện gia dụng',
+        'PC - Máy tính bàn',
+        'Màn hình máy tính',
+        'Linh kiện máy tính',
+        'Phụ kiện máy tính',
+        'Gaming Gear',
+        'Điện thoại, Tablet',
+        'Thiết bị âm thanh',
+        'Thiết bị văn phòng',
+    ];
+
+    const bannerCards = [
+        { title: 'Build PC', detail: 'Giảm thêm 2 triệu', color: '#ffb81c' },
+        { title: 'Laptop Gaming RTX 4050', detail: 'Chỉ từ 24,990 triệu', color: '#ff6f00' },
+        { title: 'iPhone 17 Pro Max', detail: 'Chỉ từ 35,990 triệu', color: '#00a8ff' },
+        { title: 'Màn hình OLED', detail: 'Giá chỉ từ 12 triệu', color: '#3cd070' },
+    ];
+
     return (
-        <div style={{ padding: '20px', fontFamily: 'sans-serif', maxWidth: '1200px', margin: '0 auto' }}>
-            
-            {/* KHU VỰC THÔNG TIN NHÂN VIÊN / ADMIN (Giữ lại từ phiên bản trước) */}
-            {user && user.role !== 'CUSTOMER' && (
-                <div style={{ 
-                    backgroundColor: user.role === 'ADMIN' ? '#f8d7da' : '#d1ecf1', 
-                    padding: '15px', borderRadius: '5px', marginBottom: '30px' 
-                }}>
-                    <h3>{user.role === 'ADMIN' ? '🔧 Bảng Điều Khiển Admin' : '📦 Khu Vực Làm Việc Của Nhân Viên'}</h3>
-                    <p>Chào mừng bạn trở lại, hệ thống ghi nhận quyền truy cập nội bộ.</p>
+        <div style={{ fontFamily: 'Segoe UI, Arial, sans-serif', backgroundColor: '#f5f8ff', color: '#1f2d3d' }}>
+            <div style={{ backgroundColor: '#0d3b76', color: '#ffffff', fontSize: '13px', padding: '10px 0' }}>
+                <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: '16px', padding: '0 16px' }}>
+                    <span>Hệ thống Showroom</span>
+                    <span>·</span>
+                    <span>Dành Cho Doanh Nghiệp</span>
+                    <span>·</span>
+                    <span>Apple Education</span>
+                    <span>·</span>
+                    <span>Hotline: <strong>1800 6867</strong></span>
+                    <span>·</span>
+                    <span>Tin công nghệ</span>
+                    <span>·</span>
+                    <span>Xây dựng cấu hình</span>
+                    <span>·</span>
+                    <span>Khuyến mãi</span>
                 </div>
-            )}
-
-            {/* KHU VỰC TRƯNG BÀY SẢN PHẨM */}
-            <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-                <h2 style={{ color: '#2c3e50', fontSize: '28px' }}>SẢN PHẨM NỔI BẬT</h2>
-                <p style={{ color: '#7f8c8d' }}>Khám phá các mặt hàng công nghệ mới nhất</p>
             </div>
 
-            {/* KHU VỰC TÌM KIẾM VÀ BỘ LỌC */}
-            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginBottom: '30px', flexWrap: 'wrap' }}>
-                <input 
-                    type="text" 
-                    placeholder="🔍 Tìm kiếm tên sản phẩm..." 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{ 
-                        padding: '12px 20px', 
-                        width: '100%', 
-                        maxWidth: '400px', 
-                        borderRadius: '25px', 
-                        border: '1px solid #bdc3c7',
-                        fontSize: '16px',
-                        outline: 'none',
-                        boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
-                    }}
-                />
-                
-                {/* Bộ lọc Danh mục */}
-                <select 
-                    value={selectedCategory} 
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    style={{ padding: '12px 20px', borderRadius: '25px', border: '1px solid #bdc3c7', outline: 'none', cursor: 'pointer' }}
-                >
-                    <option value="">🛒 Tất cả danh mục</option>
-                    {categories.map((cat, index) => (
-                        <option key={index} value={cat}>{cat}</option>
-                    ))}
-                </select>
-
-                {/* Sắp xếp Giá */}
-                <select 
-                    value={sortOrder} 
-                    onChange={(e) => setSortOrder(e.target.value)}
-                    style={{ padding: '12px 20px', borderRadius: '25px', border: '1px solid #bdc3c7', outline: 'none', cursor: 'pointer' }}
-                >
-                    <option value="">⚡ Sắp xếp: Mặc định</option>
-                    <option value="asc">📈 Giá: Thấp đến Cao</option>
-                    <option value="desc">📉 Giá: Cao đến Thấp</option>
-                </select>
-            </div>
-
-            {/* Tạo layout dạng lưới (Grid) để chứa các Card sản phẩm */}
-            <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', 
-                gap: '25px' 
-            }}>
-                {filteredProducts.map(product => (
-                    <div key={product._id} style={{ 
-                        backgroundColor: '#fff', 
-                        border: '1px solid #eee', 
-                        borderRadius: '8px', 
-                        padding: '15px',
-                        boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'space-between',
-                        transition: 'transform 0.2s' // Hiệu ứng khi hover
-                    }}>
-                        {/* Ảnh sản phẩm */}
-                        <div style={{ textAlign: 'center', marginBottom: '15px' }}>
-                            <img 
-                                src={product.image} 
-                                alt={product.name} 
-                                style={{ width: '100%', height: '180px', objectFit: 'contain' }}
-                                onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/200x150?text=Loi+Anh'; }}
-                            />
+            <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px 16px 40px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr 280px', gap: '20px', alignItems: 'start', marginBottom: '24px' }}>
+                    <div style={{ backgroundColor: '#ffffff', borderRadius: '16px', boxShadow: '0 18px 50px rgba(24, 70, 119, 0.08)', overflow: 'hidden' }}>
+                        <div style={{ padding: '20px', borderBottom: '1px solid #eef2fa', fontSize: '16px', fontWeight: 700, color: '#12263f' }}>
+                            Danh mục sản phẩm
                         </div>
+                        <ul style={{ listStyle: 'none', margin: 0, padding: '14px 0' }}>
+                            {promoCategories.map((category, index) => (
+                                <li key={index} style={{ padding: '10px 22px', borderBottom: index < promoCategories.length - 1 ? '1px solid #f1f5fb' : 'none', color: '#2e3e57', fontSize: '14px' }}>
+                                    {category}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
 
-                        {/* Thông tin */}
+                    <div style={{ background: 'linear-gradient(135deg, #0d3b76 0%, #2961bc 100%)', borderRadius: '24px', padding: '32px', color: 'white', position: 'relative', overflow: 'hidden', minHeight: '370px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                         <div>
-                            <h4 style={{ margin: '0 0 10px 0', color: '#333', fontSize: '18px', lineHeight: '1.4' }}>
-                                {product.name}
-                            </h4>
-                            <p style={{ color: '#e74c3c', fontWeight: 'bold', fontSize: '20px', margin: '0 0 10px 0' }}>
-                                {product.price.toLocaleString()} VNĐ
-                            </p>
-                            <p style={{ color: '#7f8c8d', fontSize: '13px', margin: '0 0 15px 0', height: '40px', overflow: 'hidden' }}>
-                                {product.description || 'Chưa có mô tả cho sản phẩm này.'}
-                            </p>
-                            
-                            {/* Trạng thái tồn kho */}
-                            {product.stock > 0 ? (
-                                <p style={{ color: '#27ae60', fontSize: '13px', margin: '0 0 15px 0', fontWeight: 'bold' }}>
-                                    ✓ Còn hàng ({product.stock})
-                                </p>
-                            ) : (
-                                <p style={{ color: '#e74c3c', fontSize: '13px', margin: '0 0 15px 0', fontWeight: 'bold' }}>
-                                    ✕ Hết hàng
-                                </p>
+                            <div style={{ fontSize: '38px', fontWeight: 800, lineHeight: '1.02', marginBottom: '18px' }}>
+                                Màn DEAL <span style={{ color: '#ffea66' }}>CHUẨN NET</span>
+                            </div>
+                            <div style={{ fontSize: '16px', color: 'rgba(255,255,255,0.9)', maxWidth: '520px', marginBottom: '20px' }}>
+                                Ưu đãi lớn cho học sinh – sinh viên, giảm đến 50% và thêm 500K với ShopeePay. Áp dụng đến hết 19.07.2026.
+                            </div>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                            {bannerCards.slice(0, 2).map((card, index) => (
+                                <div key={index} style={{ backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: '18px', padding: '18px', minHeight: '92px' }}>
+                                    <div style={{ fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>{card.title}</div>
+                                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#ffffff' }}>{card.detail}</div>
+                                </div>
+                            ))}
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: '12px', marginTop: '24px' }}>
+                            {heroCategories.map((item, index) => (
+                                <button key={index} onClick={() => setSelectedCategory(item.name)} style={{ background: '#ffffff22', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '999px', padding: '10px 14px', fontSize: '13px', color: '#ffffff', cursor: 'pointer' }}>
+                                    {item.name}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gap: '16px' }}>
+                        <div style={{ backgroundColor: '#ff9f00', borderRadius: '20px', color: '#1b1b1b', padding: '28px 20px', minHeight: '170px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 18px 40px rgba(255, 159, 0, 0.2)' }}>
+                            <div style={{ fontSize: '20px', fontWeight: 800 }}>ƯU ĐÃI HỌC SINH - SINH VIÊN</div>
+                            <div style={{ fontSize: '28px', fontWeight: 900 }}>Giảm đến 1 triệu</div>
+                        </div>
+                        <div style={{ backgroundColor: '#1374ff', borderRadius: '20px', color: '#ffffff', padding: '28px 20px', minHeight: '170px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 18px 40px rgba(19, 116, 255, 0.2)' }}>
+                            <div style={{ fontSize: '18px', fontWeight: 700 }}>Khuyến mãi tháng này</div>
+                            <div style={{ fontSize: '34px', fontWeight: 900 }}>Giảm đến 50%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+                    {bannerCards.map((card, index) => (
+                        <div key={index} style={{ backgroundColor: '#ffffff', borderRadius: '18px', padding: '24px 18px', boxShadow: '0 18px 40px rgba(15, 50, 92, 0.08)', minHeight: '140px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                            <div style={{ fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#4b5c7b' }}>{card.title}</div>
+                            <div style={{ fontSize: '22px', fontWeight: 800, color: card.color }}>{card.detail}</div>
+                        </div>
+                    ))}
+                </div>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', color: '#5b6c8d', fontSize: '14px', justifyContent: 'center' }}>
+                    <span>ƯU ĐÃI HOT</span>
+                    <span>GIỜ VÀNG GIÁ SỐC</span>
+                    <span>SINH NHẬT SIÊU DEAL</span>
+                    <span>MIỄN PHÍ CÀI ĐẶT</span>
+                    <span>TRẢ GÓP 0%</span>
+                    <span>APPLE EDUCATION</span>
+                    <span>TẢI APP PHONG VŨ</span>
+                    <span>XẢ KHO TRƯNG BÀY</span>
+                </div>
+
+                <div style={{ backgroundColor: '#ffffff', borderRadius: '24px', padding: '24px', boxShadow: '0 18px 40px rgba(15, 50, 92, 0.06)' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                        <div style={{ fontSize: '26px', fontWeight: 700 }}>SẢN PHẨM NỔI BẬT</div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
+                            <button onClick={() => { setSelectedCategory(''); setSearchTerm(''); }} style={{ padding: '10px 18px', borderRadius: '999px', border: '1px solid #d8e3f3', backgroundColor: '#ffffff', color: '#1f2d3d', cursor: 'pointer' }}>Tất cả</button>
+                            {categories.slice(0, 4).map((category, index) => (
+                                <button key={index} onClick={() => setSelectedCategory(category)} style={{ padding: '10px 18px', borderRadius: '999px', border: '1px solid #d8e3f3', backgroundColor: selectedCategory === category ? '#0d3b76' : '#f4f8ff', color: selectedCategory === category ? '#ffffff' : '#1f2d3d', cursor: 'pointer' }}>
+                                    {category}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {loading ? (
+                        <div style={{ textAlign: 'center', padding: '60px 0', color: '#5f6f8b' }}>
+                            Đang tải sản phẩm...
+                        </div>
+                    ) : (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '24px' }}>
+                            {filteredProducts.map(product => (
+                                <div key={product._id} style={{ backgroundColor: '#f8fbff', borderRadius: '18px', padding: '18px', border: '1px solid #e7eef8', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                                    <div>
+                                        <div style={{ height: '180px', marginBottom: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', borderRadius: '16px', backgroundColor: '#ffffff' }}>
+                                            <img
+                                                src={product.image}
+                                                alt={product.name}
+                                                style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                                                onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/200x150?text=Loi+Anh'; }}
+                                            />
+                                        </div>
+                                        <h4 style={{ margin: '0 0 10px 0', color: '#1f2d3d', fontSize: '18px', fontWeight: 700 }}>{product.name}</h4>
+                                        <p style={{ margin: '0 0 14px 0', color: '#ff5252', fontSize: '20px', fontWeight: 800 }}>
+                                            {product.price.toLocaleString()} VNĐ
+                                        </p>
+                                        <p style={{ margin: 0, color: '#5f6f8b', fontSize: '14px', minHeight: '42px', overflow: 'hidden' }}>{product.description || 'Chưa có mô tả sản phẩm.'}</p>
+                                    </div>
+                                    <div style={{ marginTop: '18px' }}>
+                                        <p style={{ margin: '0 0 10px 0', fontWeight: 700, color: product.stock > 0 ? '#27ae60' : '#e74c3c' }}>
+                                            {product.stock > 0 ? `✓ Còn hàng (${product.stock})` : '✕ Hết hàng'}
+                                        </p>
+                                        <button
+                                            onClick={() => handleAddToCart(product)}
+                                            disabled={product.stock <= 0}
+                                            style={{
+                                                width: '100%',
+                                                padding: '12px 16px',
+                                                borderRadius: '12px',
+                                                border: 'none',
+                                                backgroundColor: product.stock > 0 ? '#0d3b76' : '#9aa5b1',
+                                                color: '#ffffff',
+                                                fontWeight: 700,
+                                                cursor: product.stock > 0 ? 'pointer' : 'not-allowed'
+                                            }}
+                                        >
+                                            {product.stock > 0 ? 'Thêm vào giỏ hàng' : 'Tạm hết hàng'}
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+
+                            {filteredProducts.length === 0 && (
+                                <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '60px 0', color: '#5f6f8b' }}>
+                                    <h3>Không tìm thấy sản phẩm nào.</h3>
+                                </div>
                             )}
                         </div>
-
-                        {/* Nút Thêm vào giỏ */}
-                        <button 
-                            onClick={() => handleAddToCart(product)}
-                            disabled={product.stock <= 0} // Khóa nút nếu hết hàng
-                            style={{ 
-                                width: '100%', 
-                                padding: '10px', 
-                                backgroundColor: product.stock > 0 ? '#3498db' : '#95a5a6', 
-                                color: 'white', 
-                                border: 'none', 
-                                borderRadius: '4px', 
-                                cursor: product.stock > 0 ? 'pointer' : 'not-allowed', 
-                                fontWeight: 'bold',
-                                fontSize: '15px'
-                            }}
-                        >
-                            {product.stock > 0 ? 'Thêm Vào Giỏ Hàng' : 'Tạm Hết Hàng'}
-                        </button>
-                    </div>
-                ))}
-
-                {filteredProducts.length === 0 && (
-                    <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '50px', color: '#7f8c8d' }}>
-                        <h3>Không tìm thấy sản phẩm nào.</h3>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
 
-            {/* GIAO DIỆN BẢNG POP-UP (MODAL) */}
             {modal.isOpen && (
                 <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.45)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 1000
                 }}>
                     <div style={{
-                        backgroundColor: 'white', padding: '25px', borderRadius: '8px',
-                        width: '350px', textAlign: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+                        width: '360px',
+                        backgroundColor: '#ffffff',
+                        borderRadius: '18px',
+                        padding: '28px',
+                        boxShadow: '0 24px 60px rgba(16, 40, 102, 0.18)',
+                        textAlign: 'center'
                     }}>
-                        <h3 style={{ marginTop: 0, color: '#2c3e50' }}>ℹ️ Thông Báo</h3>
-                        <p style={{ margin: '20px 0', fontSize: '16px', color: '#333' }}>{modal.message}</p>
-                        <button onClick={closeModal} style={{ padding: '8px 25px', backgroundColor: '#3498db', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Đóng</button>
+                        <h3 style={{ margin: '0 0 16px 0', color: '#0f2f59' }}>ℹ️ Thông báo</h3>
+                        <p style={{ margin: 0, color: '#4b5b7a', fontSize: '15px' }}>{modal.message}</p>
+                        <button onClick={closeModal} style={{ marginTop: '22px', padding: '10px 24px', borderRadius: '12px', border: 'none', backgroundColor: '#0d3b76', color: 'white', cursor: 'pointer', fontWeight: 700 }}>
+                            Đóng
+                        </button>
                     </div>
                 </div>
             )}

@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import styles from './Navbar.module.css'; // Import file CSS mới tạo ở đây
+import logo from '../assets/thanhphat-logo.jpg';
 
 const Navbar = () => {
     const navigate = useNavigate();
@@ -31,7 +32,8 @@ const Navbar = () => {
         <nav className={styles.techNavbar}>
             <div>
                 <Link to="/home" className={styles.logoLink}>
-                    Thanh Phát Store
+                    <img src={logo} alt="Thành Phát Computer" className={styles.logoImage} />
+                    <span>Thành Phát Computer</span>
                 </Link>
             </div>
 
